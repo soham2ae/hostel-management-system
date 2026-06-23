@@ -3,7 +3,9 @@ package com.hostel.repository;
 import com.hostel.entity.Student;
 import com.hostel.entity.Wallet;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 /**
@@ -25,4 +27,18 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
      * @return the matching wallet, if any
      */
     Optional<Wallet> findByStudent(Student student);
+
+    /**
+     * Calculates the total current balance across all wallets.
+     *
+     * <p>Read-side projection used for dashboard wallet statistics; not
+     * a stored value. Sums {@link Wallet#getCurrentBalance()}, the
+     * cached balance, rather than recomputing from the
+     * {@code WalletTransaction} ledger.</p>
+     *
+     * @return the total current balance, or {@code null} if there are
+     *         no wallets
+     */
+    @Query("SELECT SUM(w.currentBalance) FROM Wallet w")
+    BigDecimal sumTotalCurrentBalance();
 }
