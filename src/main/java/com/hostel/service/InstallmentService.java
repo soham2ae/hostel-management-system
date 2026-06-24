@@ -93,17 +93,27 @@ public interface InstallmentService {
     boolean isOverdue(Long installmentId);
 
     /**
-     * Marks a specific installment as paid.
+     * Marks a specific installment as paid, after verifying it belongs
+     * to the given student.
      *
-     * <p>Sets the installment's stored status to
-     * {@link InstallmentStatus#PAID}. This is the sole entry point by
-     * which other services (e.g. payment recording) may settle an
-     * installment; callers outside this service must never mutate an
-     * {@link Installment} entity's status directly.</p>
+     * <p>Loads the installment and verifies that
+     * {@code installment.getStudent().getStudentId()} matches
+     * {@code studentId} before applying any change. If the installment
+     * does not belong to the given student, the operation is rejected
+     * and the installment's status is left unchanged. Only once
+     * ownership is confirmed is the installment's stored status set to
+     * {@link InstallmentStatus#PAID}.</p>
      *
+     * <p>This is the sole entry point by which other services (e.g.
+     * payment recording) may settle an installment; callers outside
+     * this service must never mutate an {@link Installment} entity's
+     * status directly.</p>
+     *
+     * @param studentId      the identifier of the student expected to
+     *                       own the installment
      * @param installmentId the identifier of the installment to mark
      *                      as paid
      * @return the updated installment
      */
-    Installment markInstallmentAsPaid(Long installmentId);
+    Installment markInstallmentAsPaid(Long studentId, Long installmentId);
 }

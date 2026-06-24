@@ -5,6 +5,8 @@ import com.hostel.entity.PaymentAttachment;
 import com.hostel.entity.Student;
 import com.hostel.enums.PaymentMode;
 import com.hostel.enums.PaymentType;
+import com.hostel.exception.ResourceNotFoundException;
+import com.hostel.exception.ValidationException;
 import com.hostel.repository.PaymentAttachmentRepository;
 import com.hostel.repository.PaymentRepository;
 import com.hostel.repository.StudentRepository;
@@ -30,11 +32,12 @@ import java.util.List;
  *
  * <p>When recording a payment of type
  * {@link PaymentType#INSTALLMENT}, this service delegates to
- * {@link InstallmentService#markInstallmentAsPaid(Long)} rather than
- * depending on {@code InstallmentRepository} directly or mutating an
- * {@link com.hostel.entity.Installment} entity itself.
+ * {@link InstallmentService#markInstallmentAsPaid(Long, Long)} rather
+ * than depending on {@code InstallmentRepository} directly or mutating
+ * an {@link com.hostel.entity.Installment} entity itself.
  * {@code InstallmentService} remains the sole owner of installment
- * business rules.</p>
+ * business rules, including verifying that the installment being
+ * settled actually belongs to the paying student.</p>
  */
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -76,16 +79,16 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public Payment recordPayment(Long studentId, Payment payment, Long installmentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         payment.setStudent(student);
         Payment savedPayment = paymentRepository.save(payment);
 
         if (savedPayment.getPaymentType() == PaymentType.INSTALLMENT) {
             if (installmentId == null) {
-                throw new RuntimeException(
+                throw new ValidationException(
                         "installmentId is required when recording a payment of type INSTALLMENT");
             }
-            installmentService.markInstallmentAsPaid(installmentId);
+            installmentService.markInstallmentAsPaid(studentId, installmentId);
         }
 
         return savedPayment;
@@ -109,7 +112,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     public Payment findPaymentById(Long paymentId) {
         return paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found with id: " + paymentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment", "id", paymentId));
     }
 
     /**
@@ -119,7 +122,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     public List<Payment> findPaymentsByStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         return paymentRepository.findByStudent(student);
     }
 

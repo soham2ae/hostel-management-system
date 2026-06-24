@@ -5,6 +5,9 @@ import com.hostel.entity.Student;
 import com.hostel.entity.StudentRoomHistory;
 import com.hostel.enums.BedStatus;
 import com.hostel.enums.StudentStatus;
+import com.hostel.exception.BedOccupiedException;
+import com.hostel.exception.DuplicateBookingException;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.BedRepository;
 import com.hostel.repository.StudentRepository;
 import com.hostel.repository.StudentRoomHistoryRepository;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Default implementation of {@link StudentService}.
@@ -60,6 +64,11 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public Student createStudentBooking(Student student) {
+        Optional<Student> existing = studentRepository.findByBookingNo(student.getBookingNo());
+        if (existing.isPresent()) {
+            throw new DuplicateBookingException(student.getBookingNo());
+        }
+
         student.setBed(null);
         return studentRepository.save(student);
     }
@@ -72,10 +81,10 @@ public class StudentServiceImpl implements StudentService {
     public Student assignBed(Long studentId, Long bedId) {
         Student student = findStudentById(studentId);
         Bed bed = bedRepository.findById(bedId)
-                .orElseThrow(() -> new RuntimeException("Bed not found with id: " + bedId));
+                .orElseThrow(() -> new ResourceNotFoundException("Bed", "id", bedId));
 
         if (bed.getStatus() == BedStatus.OCCUPIED) {
-            throw new RuntimeException("Bed is already occupied and cannot be assigned: " + bedId);
+            throw new BedOccupiedException(bedId);
         }
 
         student.setBed(bed);
@@ -123,7 +132,7 @@ public class StudentServiceImpl implements StudentService {
     @Transactional(readOnly = true)
     public Student findStudentById(Long studentId) {
         return studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
     }
 
     /**
@@ -133,7 +142,7 @@ public class StudentServiceImpl implements StudentService {
     @Transactional(readOnly = true)
     public Student findStudentByBookingNo(String bookingNo) {
         return studentRepository.findByBookingNo(bookingNo)
-                .orElseThrow(() -> new RuntimeException("Student not found with booking no: " + bookingNo));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "booking no", bookingNo));
     }
 
     /**
@@ -170,9 +179,9 @@ public class StudentServiceImpl implements StudentService {
     @Transactional(readOnly = true)
     public Student findStudentByBed(Long bedId) {
         Bed bed = bedRepository.findById(bedId)
-                .orElseThrow(() -> new RuntimeException("Bed not found with id: " + bedId));
+                .orElseThrow(() -> new ResourceNotFoundException("Bed", "id", bedId));
         return studentRepository.findByBed(bed)
-                .orElseThrow(() -> new RuntimeException("No student currently occupies bed id: " + bedId));
+                .orElseThrow(() -> new ResourceNotFoundException("No student currently occupies bed id: " + bedId));
     }
 
     /**

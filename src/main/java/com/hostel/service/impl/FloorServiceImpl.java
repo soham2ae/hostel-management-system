@@ -2,6 +2,7 @@ package com.hostel.service.impl;
 
 import com.hostel.entity.Floor;
 import com.hostel.entity.Hostel;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.FloorRepository;
 import com.hostel.repository.HostelRepository;
 import com.hostel.service.FloorService;
@@ -42,7 +43,7 @@ public class FloorServiceImpl implements FloorService {
     @Transactional
     public Floor createFloor(Long hostelId, Floor floor) {
         Hostel hostel = hostelRepository.findById(hostelId)
-                .orElseThrow(() -> new RuntimeException("Hostel not found with id: " + hostelId));
+                .orElseThrow(() -> new ResourceNotFoundException("Hostel", "id", hostelId));
         floor.setHostel(hostel);
         return floorRepository.save(floor);
     }
@@ -66,7 +67,7 @@ public class FloorServiceImpl implements FloorService {
     @Transactional(readOnly = true)
     public Floor findFloorById(Long floorId) {
         return floorRepository.findById(floorId)
-                .orElseThrow(() -> new RuntimeException("Floor not found with id: " + floorId));
+                .orElseThrow(() -> new ResourceNotFoundException("Floor", "id", floorId));
     }
 
     /**
@@ -76,7 +77,7 @@ public class FloorServiceImpl implements FloorService {
     @Transactional(readOnly = true)
     public List<Floor> findFloorsByHostel(Long hostelId) {
         Hostel hostel = hostelRepository.findById(hostelId)
-                .orElseThrow(() -> new RuntimeException("Hostel not found with id: " + hostelId));
+                .orElseThrow(() -> new ResourceNotFoundException("Hostel", "id", hostelId));
         return floorRepository.findByHostel(hostel);
     }
 
@@ -87,9 +88,9 @@ public class FloorServiceImpl implements FloorService {
     @Transactional(readOnly = true)
     public Floor findFloorByHostelAndFloorNo(Long hostelId, Integer floorNo) {
         Hostel hostel = hostelRepository.findById(hostelId)
-                .orElseThrow(() -> new RuntimeException("Hostel not found with id: " + hostelId));
+                .orElseThrow(() -> new ResourceNotFoundException("Hostel", "id", hostelId));
         return floorRepository.findByHostelAndFloorNo(hostel, floorNo)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Floor not found for hostel id: " + hostelId + " and floor no: " + floorNo));
     }
 }

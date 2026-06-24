@@ -4,6 +4,7 @@ import com.hostel.entity.Bed;
 import com.hostel.entity.Floor;
 import com.hostel.entity.Room;
 import com.hostel.enums.BedStatus;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.BedRepository;
 import com.hostel.repository.FloorRepository;
 import com.hostel.repository.RoomRepository;
@@ -52,7 +53,7 @@ public class RoomServiceImpl implements RoomService {
     @Transactional
     public Room createRoom(Long floorId, Room room) {
         Floor floor = floorRepository.findById(floorId)
-                .orElseThrow(() -> new RuntimeException("Floor not found with id: " + floorId));
+                .orElseThrow(() -> new ResourceNotFoundException("Floor", "id", floorId));
         room.setFloor(floor);
         return roomRepository.save(room);
     }
@@ -76,7 +77,7 @@ public class RoomServiceImpl implements RoomService {
     @Transactional(readOnly = true)
     public Room findRoomById(Long roomId) {
         return roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found with id: " + roomId));
+                .orElseThrow(() -> new ResourceNotFoundException("Room", "id", roomId));
     }
 
     /**
@@ -86,7 +87,7 @@ public class RoomServiceImpl implements RoomService {
     @Transactional(readOnly = true)
     public List<Room> findRoomsByFloor(Long floorId) {
         Floor floor = floorRepository.findById(floorId)
-                .orElseThrow(() -> new RuntimeException("Floor not found with id: " + floorId));
+                .orElseThrow(() -> new ResourceNotFoundException("Floor", "id", floorId));
         return roomRepository.findByFloor(floor);
     }
 

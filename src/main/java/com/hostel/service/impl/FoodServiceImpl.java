@@ -2,6 +2,7 @@ package com.hostel.service.impl;
 
 import com.hostel.entity.Food;
 import com.hostel.entity.Student;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.FoodRepository;
 import com.hostel.repository.StudentRepository;
 import com.hostel.service.FoodService;
@@ -41,7 +42,7 @@ public class FoodServiceImpl implements FoodService {
     @Transactional
     public Food createFood(Long studentId, Food food) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         food.setStudent(student);
         return foodRepository.save(food);
     }
@@ -66,7 +67,7 @@ public class FoodServiceImpl implements FoodService {
     @Transactional(readOnly = true)
     public Food findFoodById(Long foodId) {
         return foodRepository.findById(foodId)
-                .orElseThrow(() -> new RuntimeException("Food record not found with id: " + foodId));
+                .orElseThrow(() -> new ResourceNotFoundException("Food record", "id", foodId));
     }
 
     /**
@@ -76,8 +77,8 @@ public class FoodServiceImpl implements FoodService {
     @Transactional(readOnly = true)
     public Food findFoodByStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         return foodRepository.findByStudent(student)
-                .orElseThrow(() -> new RuntimeException("Food record not found for student id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Food record", "student id", studentId));
     }
 }

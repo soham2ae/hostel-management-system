@@ -1,12 +1,15 @@
 package com.hostel.service.impl;
 
 import com.hostel.entity.Hostel;
+import com.hostel.exception.DuplicateHostelException;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.HostelRepository;
 import com.hostel.service.HostelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Default implementation of {@link HostelService}.
@@ -35,6 +38,16 @@ public class HostelServiceImpl implements HostelService {
     @Override
     @Transactional
     public Hostel createHostel(Hostel hostel) {
+        Optional<Hostel> existingByCode = hostelRepository.findByHostelCode(hostel.getHostelCode());
+        if (existingByCode.isPresent()) {
+            throw new DuplicateHostelException("hostel code", hostel.getHostelCode());
+        }
+
+        Optional<Hostel> existingByName = hostelRepository.findByHostelName(hostel.getHostelName());
+        if (existingByName.isPresent()) {
+            throw new DuplicateHostelException("hostel name", hostel.getHostelName());
+        }
+
         return hostelRepository.save(hostel);
     }
 
@@ -57,7 +70,7 @@ public class HostelServiceImpl implements HostelService {
     @Transactional(readOnly = true)
     public Hostel findHostelById(Long hostelId) {
         return hostelRepository.findById(hostelId)
-                .orElseThrow(() -> new RuntimeException("Hostel not found with id: " + hostelId));
+                .orElseThrow(() -> new ResourceNotFoundException("Hostel", "id", hostelId));
     }
 
     /**
@@ -67,7 +80,7 @@ public class HostelServiceImpl implements HostelService {
     @Transactional(readOnly = true)
     public Hostel findHostelByCode(String hostelCode) {
         return hostelRepository.findByHostelCode(hostelCode)
-                .orElseThrow(() -> new RuntimeException("Hostel not found with code: " + hostelCode));
+                .orElseThrow(() -> new ResourceNotFoundException("Hostel", "code", hostelCode));
     }
 
     /**

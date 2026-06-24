@@ -3,6 +3,8 @@ package com.hostel.service.impl;
 import com.hostel.entity.Installment;
 import com.hostel.entity.Student;
 import com.hostel.enums.InstallmentStatus;
+import com.hostel.exception.InstallmentOwnershipException;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.InstallmentRepository;
 import com.hostel.repository.StudentRepository;
 import com.hostel.service.InstallmentService;
@@ -51,7 +53,7 @@ public class InstallmentServiceImpl implements InstallmentService {
     @Transactional
     public Installment createInstallment(Long studentId, Installment installment) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         installment.setStudent(student);
         return installmentRepository.save(installment);
     }
@@ -77,7 +79,7 @@ public class InstallmentServiceImpl implements InstallmentService {
     @Transactional(readOnly = true)
     public Installment findInstallmentById(Long installmentId) {
         return installmentRepository.findById(installmentId)
-                .orElseThrow(() -> new RuntimeException("Installment not found with id: " + installmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Installment", "id", installmentId));
     }
 
     /**
@@ -87,7 +89,7 @@ public class InstallmentServiceImpl implements InstallmentService {
     @Transactional(readOnly = true)
     public List<Installment> findInstallmentsByStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         return installmentRepository.findByStudent(student);
     }
 
@@ -130,8 +132,13 @@ public class InstallmentServiceImpl implements InstallmentService {
      */
     @Override
     @Transactional
-    public Installment markInstallmentAsPaid(Long installmentId) {
+    public Installment markInstallmentAsPaid(Long studentId, Long installmentId) {
         Installment installment = findInstallmentById(installmentId);
+
+        if (!installment.getStudent().getStudentId().equals(studentId)) {
+            throw new InstallmentOwnershipException(installmentId, studentId);
+        }
+
         installment.setStatus(InstallmentStatus.PAID);
         return installmentRepository.save(installment);
     }

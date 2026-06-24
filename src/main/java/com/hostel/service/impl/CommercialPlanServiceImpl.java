@@ -2,6 +2,7 @@ package com.hostel.service.impl;
 
 import com.hostel.entity.CommercialPlan;
 import com.hostel.entity.Student;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.CommercialPlanRepository;
 import com.hostel.repository.StudentRepository;
 import com.hostel.service.CommercialPlanService;
@@ -42,7 +43,7 @@ public class CommercialPlanServiceImpl implements CommercialPlanService {
     @Transactional
     public CommercialPlan createCommercialPlan(Long studentId, CommercialPlan plan) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         plan.setStudent(student);
         return commercialPlanRepository.save(plan);
     }
@@ -68,7 +69,7 @@ public class CommercialPlanServiceImpl implements CommercialPlanService {
     @Transactional(readOnly = true)
     public CommercialPlan findCommercialPlanById(Long planId) {
         return commercialPlanRepository.findById(planId)
-                .orElseThrow(() -> new RuntimeException("Commercial plan not found with id: " + planId));
+                .orElseThrow(() -> new ResourceNotFoundException("Commercial plan", "id", planId));
     }
 
     /**
@@ -78,8 +79,8 @@ public class CommercialPlanServiceImpl implements CommercialPlanService {
     @Transactional(readOnly = true)
     public CommercialPlan findCommercialPlanByStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         return commercialPlanRepository.findByStudent(student)
-                .orElseThrow(() -> new RuntimeException("Commercial plan not found for student id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Commercial plan", "student id", studentId));
     }
 }

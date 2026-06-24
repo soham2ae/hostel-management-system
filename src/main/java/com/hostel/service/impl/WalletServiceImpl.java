@@ -4,6 +4,9 @@ import com.hostel.entity.Student;
 import com.hostel.entity.Wallet;
 import com.hostel.entity.WalletTransaction;
 import com.hostel.enums.WalletTransactionType;
+import com.hostel.exception.InsufficientWalletBalanceException;
+import com.hostel.exception.InvalidAmountException;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.StudentRepository;
 import com.hostel.repository.WalletRepository;
 import com.hostel.repository.WalletTransactionRepository;
@@ -61,7 +64,7 @@ public class WalletServiceImpl implements WalletService {
     @Transactional
     public Wallet createWallet(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
 
         Wallet wallet = Wallet.builder()
                 .student(student)
@@ -78,7 +81,7 @@ public class WalletServiceImpl implements WalletService {
     @Transactional(readOnly = true)
     public Wallet findWalletById(Long walletId) {
         return walletRepository.findById(walletId)
-                .orElseThrow(() -> new RuntimeException("Wallet not found with id: " + walletId));
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet", "id", walletId));
     }
 
     /**
@@ -88,9 +91,9 @@ public class WalletServiceImpl implements WalletService {
     @Transactional(readOnly = true)
     public Wallet findWalletByStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         return walletRepository.findByStudent(student)
-                .orElseThrow(() -> new RuntimeException("Wallet not found for student id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet", "student id", studentId));
     }
 
     /**
@@ -130,9 +133,7 @@ public class WalletServiceImpl implements WalletService {
         Wallet wallet = findWalletByStudent(studentId);
 
         if (wallet.getCurrentBalance().compareTo(transactionAmount) < 0) {
-            throw new RuntimeException(
-                    "Insufficient wallet balance: current balance " + wallet.getCurrentBalance()
-                            + " is less than debit amount " + transactionAmount);
+            throw new InsufficientWalletBalanceException(wallet.getCurrentBalance(), transactionAmount);
         }
 
         wallet.setCurrentBalance(wallet.getCurrentBalance().subtract(transactionAmount));
@@ -171,7 +172,7 @@ public class WalletServiceImpl implements WalletService {
      */
     private void requirePositive(BigDecimal amount, String fieldName) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException(fieldName + " must be a positive amount, but was: " + amount);
+            throw new InvalidAmountException(fieldName, amount);
         }
     }
 }

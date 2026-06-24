@@ -22,6 +22,11 @@ public interface BedService {
      * (typically controllers) need only supply the parent identifier
      * rather than a hydrated {@link Room} entity.</p>
      *
+     * <p>The bed's status is always forced to
+     * {@link com.hostel.enums.BedStatus#VACANT} on creation, regardless
+     * of any status set on the incoming {@code bed} parameter. A newly
+     * created bed must never begin life as occupied.</p>
+     *
      * @param roomId the identifier of the room this bed belongs to
      * @param bed    the bed to create
      * @return the created bed, with its generated identifier populated

@@ -3,6 +3,7 @@ package com.hostel.service.impl;
 import com.hostel.entity.Room;
 import com.hostel.entity.Student;
 import com.hostel.entity.StudentRoomHistory;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.RoomRepository;
 import com.hostel.repository.StudentRepository;
 import com.hostel.repository.StudentRoomHistoryRepository;
@@ -58,7 +59,7 @@ public class StudentRoomHistoryServiceImpl implements StudentRoomHistoryService 
     @Transactional(readOnly = true)
     public StudentRoomHistory findHistoryById(Long historyId) {
         return studentRoomHistoryRepository.findById(historyId)
-                .orElseThrow(() -> new RuntimeException("Room history record not found with id: " + historyId));
+                .orElseThrow(() -> new ResourceNotFoundException("Room history record", "id", historyId));
     }
 
     /**
@@ -68,7 +69,7 @@ public class StudentRoomHistoryServiceImpl implements StudentRoomHistoryService 
     @Transactional(readOnly = true)
     public List<StudentRoomHistory> findHistoryByStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         return studentRoomHistoryRepository.findByStudent(student);
     }
 
@@ -79,7 +80,7 @@ public class StudentRoomHistoryServiceImpl implements StudentRoomHistoryService 
     @Transactional(readOnly = true)
     public List<StudentRoomHistory> findHistoryByRoom(Long roomId) {
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found with id: " + roomId));
+                .orElseThrow(() -> new ResourceNotFoundException("Room", "id", roomId));
         return studentRoomHistoryRepository.findByRoom(room);
     }
 }

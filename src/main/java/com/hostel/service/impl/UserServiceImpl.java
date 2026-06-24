@@ -1,6 +1,7 @@
 package com.hostel.service.impl;
 
 import com.hostel.entity.User;
+import com.hostel.exception.ResourceNotFoundException;
 import com.hostel.repository.UserRepository;
 import com.hostel.service.UserService;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,6 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public User findUserByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
     }
 }
